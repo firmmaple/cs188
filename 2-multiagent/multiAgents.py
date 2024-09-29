@@ -12,11 +12,12 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
+from typing import Union
 from util import manhattanDistance
 import random
 import util
 
-from game import Agent
+from game import Agent, Directions
 from pacman import GameState
 
 
@@ -122,7 +123,7 @@ class ReflexAgent(Agent):
         return score
 
 
-def scoreEvaluationFunction(currentGameState: GameState):
+def scoreEvaluationFunction(currentGameState: GameState) -> float:
     """
     This default evaluation function just returns the score of the state.
     The score is the same one displayed in the Pacman GUI.
@@ -151,7 +152,7 @@ class MultiAgentSearchAgent(Agent):
     def __init__(self, evalFn="scoreEvaluationFunction", depth="2"):
         self.index = 0  # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
-        self.depth = int(depth)
+        self.depthLimit = int(depth)
 
 
 class MinimaxAgent(MultiAgentSearchAgent):
@@ -183,7 +184,45 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def minimax(agentIndex: int, gameState: GameState, curDepth: int):
+            if gameState.isWin() or gameState.isLose() or curDepth == self.depthLimit:
+                return self.evaluationFunction(gameState)
+
+            if agentIndex == 0:  # Pacman is always agent 0
+                return maxValue(agentIndex, gameState, curDepth)
+            else:
+                return minValue(agentIndex, gameState, curDepth)
+
+        def maxValue(agentIndex: int, gameState: GameState, curDepth: int):
+            bestValue = float("-inf")
+            bestAction = None
+            # the agents move in order of increasing agent index
+            nextAgentIndex = (agentIndex + 1) % gameState.getNumAgents()
+            nextDepth = curDepth if nextAgentIndex != 0 else curDepth + 1
+            for action in gameState.getLegalActions(agentIndex):
+                successorState = gameState.generateSuccessor(agentIndex, action)
+                successorValue = minimax(nextAgentIndex, successorState, nextDepth)
+                if successorValue > bestValue:
+                    bestValue = successorValue
+                    bestAction = action
+            if curDepth == 0:
+                return bestAction  # return action instead of value
+            return bestValue
+
+        def minValue(agentIndex: int, gameState: GameState, curDepth: int):
+            bestValue = float("+inf")
+            # the agents move in order of increasing agent index
+            nextAgentIndex = (agentIndex + 1) % gameState.getNumAgents()
+            nextDepth = curDepth if nextAgentIndex != 0 else curDepth + 1
+            for action in gameState.getLegalActions(agentIndex):
+                successorState = gameState.generateSuccessor(agentIndex, action)
+                bestValue = min(
+                    bestValue, minimax(nextAgentIndex, successorState, nextDepth)
+                )
+            return bestValue
+
+        return minimax(self.index, gameState, 0)
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
