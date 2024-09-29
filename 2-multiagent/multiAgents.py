@@ -13,8 +13,8 @@
 
 
 from util import manhattanDistance
-from game import Directions
-import random, util
+import random
+import util
 
 from game import Agent
 from pacman import GameState
@@ -79,8 +79,9 @@ class ReflexAgent(Agent):
 
         "*** YOUR CODE HERE ***"
         # score = successorGameState.getScore()
-        # It seems that initialize score to 0 is slightly better
-        # than using the score from the game state
+        # getScore() returns the total score earned by Pacman.
+        # It seems that initializing the score to 0 is slightly better
+        # than using the score from the game state.
         score = 0
 
         # Calculate manhattan distance to the closest ghost
@@ -116,7 +117,7 @@ class ReflexAgent(Agent):
             score += 10 / distanceToFood
 
         # Penalize for remaining food
-        score -= len(newFood.asList()) * 10
+        score -= successorGameState.getNumFood() * 10
 
         return score
 
