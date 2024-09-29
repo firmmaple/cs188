@@ -235,7 +235,56 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def alphaBeta(
+            agentIndex: int, gameState: GameState, curDepth: int, alpha, beta
+        ):
+            if gameState.isWin() or gameState.isLose() or curDepth == self.depthLimit:
+                return self.evaluationFunction(gameState)
+
+            if agentIndex == 0:  # Pacman is always agent 0
+                return maxValue(agentIndex, gameState, curDepth, alpha, beta)
+            else:
+                return minValue(agentIndex, gameState, curDepth, alpha, beta)
+
+        def maxValue(agentIndex: int, gameState: GameState, curDepth: int, alpha, beta):
+            bestValue = float("-inf")
+            bestAction = None
+            # the agents move in order of increasing agent index
+            nextAgentIndex = (agentIndex + 1) % gameState.getNumAgents()
+            nextDepth = curDepth if nextAgentIndex != 0 else curDepth + 1
+            for action in gameState.getLegalActions(agentIndex):
+                successorState = gameState.generateSuccessor(agentIndex, action)
+                value = alphaBeta(
+                    nextAgentIndex, successorState, nextDepth, alpha, beta
+                )
+                if value > bestValue:
+                    bestValue = value
+                    bestAction = action
+                if bestValue > beta:
+                    return bestValue
+                alpha = max(alpha, bestValue)
+            if curDepth == 0:
+                return bestAction  # return action instead of value
+            return bestValue
+
+        def minValue(agentIndex: int, gameState: GameState, curDepth: int, alpha, beta):
+            bestValue = float("+inf")
+            # the agents move in order of increasing agent index
+            nextAgentIndex = (agentIndex + 1) % gameState.getNumAgents()
+            nextDepth = curDepth if nextAgentIndex != 0 else curDepth + 1
+            for action in gameState.getLegalActions(agentIndex):
+                successorState = gameState.generateSuccessor(agentIndex, action)
+                bestValue = min(
+                    bestValue,
+                    alphaBeta(nextAgentIndex, successorState, nextDepth, alpha, beta),
+                )
+                if bestValue < alpha:
+                    return bestValue
+                beta = min(beta, bestValue)
+            return bestValue
+
+        return alphaBeta(self.index, gameState, 0, float("-inf"), float("+inf"))
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
