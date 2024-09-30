@@ -300,7 +300,47 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def expectimax(agentIndex: int, gameState: GameState, curDepth: int):
+            if gameState.isWin() or gameState.isLose() or curDepth == self.depthLimit:
+                return self.evaluationFunction(gameState)
+
+            if agentIndex == 0:  # Pacman is always agent 0
+                return maxValue(agentIndex, gameState, curDepth)
+            else:
+                return expValue(agentIndex, gameState, curDepth)
+
+        def maxValue(agentIndex: int, gameState: GameState, curDepth: int):
+            bestValue = float("-inf")
+            bestAction = None
+            # the agents move in order of increasing agent index
+            nextAgentIndex = (agentIndex + 1) % gameState.getNumAgents()
+            nextDepth = curDepth if nextAgentIndex != 0 else curDepth + 1
+            for action in gameState.getLegalActions(agentIndex):
+                successorState = gameState.generateSuccessor(agentIndex, action)
+                successorValue = expectimax(nextAgentIndex, successorState, nextDepth)
+                if successorValue > bestValue:
+                    bestValue = successorValue
+                    bestAction = action
+            if curDepth == 0:
+                return bestAction  # return action instead of value
+            return bestValue
+
+        def expValue(agentIndex: int, gameState: GameState, curDepth: int):
+            value = 0
+            # the agents move in order of increasing agent index
+            nextAgentIndex = (agentIndex + 1) % gameState.getNumAgents()
+            nextDepth = curDepth if nextAgentIndex != 0 else curDepth + 1
+            legalActions = gameState.getLegalActions(agentIndex)
+            for action in legalActions:
+                successorState = gameState.generateSuccessor(agentIndex, action)
+                # Ghost chooses actions from legal actions uniformly at random
+                value += expectimax(nextAgentIndex, successorState, nextDepth) / len(
+                    legalActions
+                )
+            return value
+
+        return expectimax(self.index, gameState, 0)
 
 
 def betterEvaluationFunction(currentGameState: GameState):
